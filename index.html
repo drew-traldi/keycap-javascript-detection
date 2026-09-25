@@ -28,16 +28,23 @@ h1{font-size:clamp(34px,6vw,54px);font-weight:800;letter-spacing:-1px}
 .mods{display:flex;gap:10px;justify-content:center;margin-bottom:20px;flex-wrap:wrap}
 .mods span{padding:6px 14px;border-radius:12px;background:#fff;box-shadow:0 4px 0 #eadff8;font-weight:700;opacity:.4;transition:.1s}
 .mods span.on{opacity:1;background:#ffd6ec;box-shadow:0 4px 0 #ff9fcf}
-.kb{display:flex;flex-direction:column;gap:6px;align-items:center;margin-top:10px;overflow-x:auto;padding-bottom:10px}
-.kb div{display:flex;gap:6px}
-.kb i{font-style:normal;min-width:40px;height:40px;border-radius:10px;background:#fff;box-shadow:0 4px 0 #d8cdf0;display:grid;place-items:center;font-size:13px;font-weight:700;padding:0 8px;transition:.1s}
+.kb{display:flex;flex-direction:column;gap:6px;align-items:flex-start;margin-top:10px;overflow-x:auto;padding-bottom:10px;-webkit-overflow-scrolling:touch}
+.kb div{display:flex;gap:6px;margin:0 auto}
+.kb i{font-style:normal;min-width:var(--w,40px);height:40px;border-radius:10px;background:#fff;box-shadow:0 4px 0 #d8cdf0;display:grid;place-items:center;font-size:13px;font-weight:700;padding:0 8px;transition:.1s}
 .kb i.on{background:#8a6bff;color:#fff;box-shadow:0 1px 0 #5a3fd0;transform:translateY(3px)}
 .kb i.seen{background:#e8ffef}
 .log{font:13px 'JetBrains Mono';text-align:left;background:#fff;border-radius:16px;padding:12px;max-height:160px;overflow:auto;margin-top:20px}
 .log div{padding:3px 0;border-bottom:1px dashed #eee}
-.idle{font-size:22px;opacity:.6}
+.idle{font-size:22px;opacity:.6;-webkit-text-fill-color:#3d2c5c}
+.tap{display:none;margin:0 auto 18px;font:700 18px 'Baloo 2',sans-serif;color:#fff;background:linear-gradient(135deg,#ff6fb5,#8a6bff);border:0;border-radius:16px;padding:12px 22px;min-height:48px;box-shadow:0 6px 0 #5a3fd0;cursor:pointer}
+.tap:active{transform:translateY(4px);box-shadow:0 2px 0 #5a3fd0}
+#ki{position:fixed;left:0;bottom:0;width:1px;height:1px;opacity:0;font-size:16px;border:0;padding:0}
+.touch-only{display:none}
+@media (hover:none) and (pointer:coarse){.tap{display:inline-block}.touch-only{display:inline}.desk-only{display:none}}
+@media (max-width:640px){.hero{gap:18px;min-height:0}.cap{width:140px;height:140px;border-radius:26px}.code{font-size:clamp(64px,20vw,110px)}.grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}.kb,.kb div{gap:4px}.kb i{min-width:calc(var(--w,40px)*.72);height:34px;font-size:11px;padding:0 5px;border-radius:8px}}
 </style></head><body><div class="w">
-<h1>Keycap ⌨︎</h1><div class="sub">Press any key to inspect its JavaScript event. Click a field to copy it.</div>
+<h1>Keycap ⌨︎</h1><div class="sub"><span class="desk-only">Press any key to inspect its JavaScript event. Click a field to copy it.</span><span class="touch-only">Open your keyboard and type to inspect each JavaScript event. Tap a field to copy it.</span></div>
+<button class="tap" id="tap" type="button">⌨︎ Tap to open your keyboard</button><input id="ki" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-label="Type here to inspect key events">
 <div class="hero"><div class="cap" id="cap">?</div><div class="code" id="code"><span class="idle">press a key</span></div></div>
 <div class="mods" id="mods"><span data-m="shiftKey">⇧ Shift</span><span data-m="ctrlKey">⌃ Ctrl</span><span data-m="altKey">⌥ Alt</span><span data-m="metaKey">⌘ Meta</span></div>
 <div class="grid" id="grid"></div>
@@ -49,7 +56,7 @@ const $=id=>document.getElementById(id);
 const ROWS=[['Escape','F1','F2','F3','F4','F5','F6','F7','F8','F9','F10','F11','F12'],['Backquote','Digit1','Digit2','Digit3','Digit4','Digit5','Digit6','Digit7','Digit8','Digit9','Digit0','Minus','Equal','Backspace'],['Tab','KeyQ','KeyW','KeyE','KeyR','KeyT','KeyY','KeyU','KeyI','KeyO','KeyP','BracketLeft','BracketRight','Backslash'],['CapsLock','KeyA','KeyS','KeyD','KeyF','KeyG','KeyH','KeyJ','KeyK','KeyL','Semicolon','Quote','Enter'],['ShiftLeft','KeyZ','KeyX','KeyC','KeyV','KeyB','KeyN','KeyM','Comma','Period','Slash','ShiftRight'],['ControlLeft','AltLeft','MetaLeft','Space','MetaRight','AltRight','ArrowLeft','ArrowUp','ArrowDown','ArrowRight']];
 const lab=c=>({Backquote:'`',Minus:'-',Equal:'=',BracketLeft:'[',BracketRight:']',Backslash:'\\',Semicolon:';',Quote:"'",Comma:',',Period:'.',Slash:'/',Space:'space',Escape:'esc',Backspace:'⌫',Enter:'⏎',Tab:'⇥',CapsLock:'⇪',ShiftLeft:'⇧',ShiftRight:'⇧',ControlLeft:'⌃',AltLeft:'⌥',AltRight:'⌥',MetaLeft:'⌘',MetaRight:'⌘',ArrowLeft:'←',ArrowUp:'↑',ArrowDown:'↓',ArrowRight:'→'})[c]||c.replace(/^(Key|Digit)/,'');
 const W={Backspace:80,Tab:64,CapsLock:76,Enter:84,ShiftLeft:100,ShiftRight:110,Space:240};
-$('kb').innerHTML=ROWS.map(r=>`<div>${r.map(c=>`<i data-c="${c}" style="min-width:${W[c]||40}px">${lab(c)}</i>`).join('')}</div>`).join('');
+$('kb').innerHTML=ROWS.map(r=>`<div>${r.map(c=>`<i data-c="${c}" style="--w:${W[c]||40}px">${lab(c)}</i>`).join('')}</div>`).join('');
 const LOC=['Standard','Left','Right','Numpad'];
 addEventListener('keydown',e=>{if(!(e.metaKey&&['r','R'].includes(e.key)))e.preventDefault();
  $('cap').textContent=e.key===' '?'␣':e.key.length>8?e.key.slice(0,8):e.key;$('cap').classList.add('hit');
@@ -60,5 +67,9 @@ addEventListener('keydown',e=>{if(!(e.metaKey&&['r','R'].includes(e.key)))e.prev
  $('mods').querySelectorAll('span').forEach(s=>s.classList.toggle('on',e[s.dataset.m]));
  const k=$('kb').querySelector(`[data-c="${e.code}"]`);if(k)k.classList.add('on','seen');
  $('log').insertAdjacentHTML('afterbegin',`<div>keydown · key=${JSON.stringify(e.key).replace(/</g,'&lt;')} code=${e.code} keyCode=${e.keyCode}${e.repeat?' (repeat)':''}</div>`)});
+/* Phones only show a keyboard for a focused field. Android's virtual keyboard reports key "Unidentified" / keyCode 229, so the typed text comes from the input event. */
+let last229=false;const ki=$('ki');const openKb=()=>{ki.focus({preventScroll:true})};$('tap').onclick=openKb;$('cap').addEventListener('click',openKb);
+addEventListener('keydown',e=>{last229=e.keyCode===229||e.key==='Unidentified'},true);
+ki.addEventListener('input',e=>{const d=e.data||ki.value;ki.value='';if(!last229||!d)return;const ch=[...d].pop();$('cap').textContent=ch===' '?'␣':ch;$('log').insertAdjacentHTML('afterbegin',`<div>input · data=${JSON.stringify(d).replace(/</g,'&lt;')} (virtual keyboards send keyCode 229 while composing)</div>`)});
 addEventListener('keyup',e=>{$('cap').classList.remove('hit');const k=$('kb').querySelector(`[data-c="${e.code}"]`);if(k)k.classList.remove('on');$('mods').querySelectorAll('span').forEach(s=>s.classList.toggle('on',e[s.dataset.m]))});
 </script></body></html>
